@@ -14,7 +14,7 @@ class Ricochet {
     this.boardHeight = boardHeight;
     this.boardWidth = boardWidth;
     this.robots = [new Robot(1,1,"0", "#FF0000"), new Robot(2,2,"1","#00FF00"), new Robot(3,3,"2","#0000FF"), new Robot(4,4,"3", "#00FFFF")]
-    // this.walls = {((1,1),(2,1)), ((3,1),(3,2))};
+    this.walls = [[1,1,2,1], [3,1,3,2]];
   }
 
 
@@ -24,6 +24,10 @@ class Ricochet {
 
   getRobots(){
   	return this.robots;
+  }
+
+  getWalls(){
+  	return this.walls;
   }
 
 
@@ -55,6 +59,7 @@ function draw(canvas, ricochet, rows, cols){
 
 	drawGrid(canvas, rows, cols);
 	drawRobots(canvas, ricochet.getRobots(), rows, cols);
+	drawWalls(canvas, ricochet.getWalls(), rows, cols);
 }
 
 
@@ -101,6 +106,7 @@ function drawCircle(x, y, size, color){
 
 function drawRobots(canvas, robots, rows, cols){
 
+	var ctx = canvas.getContext("2d");
 
 	// Calculate number distance between lines 
 	var vSpace = canvas.width / rows;
@@ -110,6 +116,34 @@ function drawRobots(canvas, robots, rows, cols){
 	for(robot of robots){
 		console.log(robot.x)
 		drawCircle(robot.x * hSpace - hSpace / 2, robot.y * vSpace - vSpace / 2, 20, robot.color)
+	}
+}
+
+
+function drawWall(canvas, x1, y1, x2, y2){
+
+	// Calculate number distance between lines 
+	var vSpace = canvas.width / rows;
+	var hSpace = canvas.height / cols;
+
+	var ctx = canvas.getContext("2d");
+	ctx.beginPath();
+	ctx.moveTo(x1 * hSpace, y1 * vSpace);
+	ctx.lineTo(x2 * hSpace, y2 * vSpace);
+	ctx.strokeStyle = "#111111";
+	ctx.lineWidth = 8;
+	ctx.stroke();
+
+
+}
+
+function drawWalls(canvas, walls, rows, cols){
+
+	var ctx = canvas.getContext("2d");
+
+	console.log(walls)
+	for(wall of walls){
+		drawWall(canvas, wall[0], wall[1], wall[2], wall[3]);
 	}
 }
 
