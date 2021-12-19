@@ -104,9 +104,7 @@ function drawCircle(x, y, size, color){
 }
 
 
-function drawRobots(canvas, robots, rows, cols){
-
-	var ctx = canvas.getContext("2d");
+function drawRobots(ctx, robots, rows, cols){
 
 	// Calculate number distance between lines 
 	var vSpace = canvas.width / rows;
@@ -120,13 +118,12 @@ function drawRobots(canvas, robots, rows, cols){
 }
 
 
-function drawWall(canvas, x1, y1, x2, y2){
+function drawWall(ctx, x1, y1, x2, y2){
 
 	// Calculate number distance between lines 
 	var vSpace = canvas.width / rows;
 	var hSpace = canvas.height / cols;
 
-	var ctx = canvas.getContext("2d");
 	ctx.beginPath();
 	ctx.moveTo(x1 * hSpace, y1 * vSpace);
 	ctx.lineTo(x2 * hSpace, y2 * vSpace);
@@ -137,13 +134,11 @@ function drawWall(canvas, x1, y1, x2, y2){
 
 }
 
-function drawWalls(canvas, walls, rows, cols){
-
-	var ctx = canvas.getContext("2d");
+function drawWalls(ctx, walls, rows, cols){
 
 	console.log(walls)
 	for(wall of walls){
-		drawWall(canvas, wall[0], wall[1], wall[2], wall[3]);
+		drawWall(ctx, wall[0], wall[1], wall[2], wall[3]);
 	}
 }
 
@@ -155,18 +150,70 @@ drawGrid(canvas, 50);
 
 canvas.addEventListener("mousedown", mouseDownHandler, false);
 
-// Receives mouse inputs
-function mouseDownHandler(e){
 
-    console.log("mouse clicked")
-	let rect = canvas.getBoundingClientRect();
-	let x = Math.floor(e.clientX - rect.left);
-	let y = Math.floor(e.clientY - rect.top);
+// canvas.addEventListener('mousemove', moveListener);
 
-    console.log(x / 60,y / 60)
+canvas.addEventListener('mouseup', mouseUpListener);
+
+
+function mouseDragged(x1,y1,x2,y2){
+
+	var dist = Math.sqrt((x2-x1) * (x2-x1) +(y2-y1)*(y2-y1));
+	if(dist < 100) return;
+
+	
+	var dAx = x2 - x1;
+	var dAy = y2 - y1;
+	var dBx = 1;
+	var dBy = 0;
+
+
+	var angle = Math.atan2(dAx * dBy - dAy * dBx, dAx * dBx + dAy * dBy);
+	var degree_angle = angle * (180 / Math.PI);
+	console.log(degree_angle);
+
+	if(degree_angle > -30 && degree_angle < 30){
+		console.log("right")
+	}
+	else if(degree_angle > 60 && degree_angle < 120){
+		console.log("up")
+	}
+	else if(degree_angle > 150 && degree_angle < 180 || degree_angle < -150 && degree_angle > -180 ){
+		console.log("left")
+	}
+	else if(degree_angle < -60 && degree_angle > -120){
+		console.log("down")
+	}
+
+
+
 }
 
 
+var x1, y1, x2, y2;
+
+// Receives mouse inputs
+function mouseDownHandler(e){
+
+  console.log("mouse clicked")
+	let rect = canvas.getBoundingClientRect();
+	x1 = Math.floor(e.clientX - rect.left);
+	y1 = Math.floor(e.clientY - rect.top);
+
+
+}
+
+// Receives mouse inputs
+function mouseUpListener(e){
+
+  console.log("mouse released")
+	let rect = canvas.getBoundingClientRect();
+	x2 = Math.floor(e.clientX - rect.left);
+	y2 = Math.floor(e.clientY - rect.top);
+
+
+    mouseDragged(x1,y1,x2,y2);
+}
 
 
 
