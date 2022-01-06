@@ -9,16 +9,38 @@ class Robot{
 }
 
 
-class Ricochet {
-  constructor(boardHeight, boardWidth) {
+class App {
+  constructor(canvas, boardHeight, boardWidth) {
     this.boardHeight = boardHeight;
     this.boardWidth = boardWidth;
     this.robots = [new Robot(1,1,"0", "#FF0000"), new Robot(2,2,"1","#00FF00"), new Robot(3,3,"2","#0000FF"), new Robot(4,4,"3", "#00FFFF")]
     this.walls = [[1,1,2,1], [3,1,3,2]];
+    this.canvas = canvas;
+    this.InputHandler = new InputHandler(canvas);
+    window.addEventListener("moverobot", this, false);
+
+    this.draw();
+
+  }
+
+
+ 	handleEvent(event) {
+
+ 		console.log(event);
+
+    var method = 'on_' + event.type;
+
+  	// call method if there
+ 		if ( this[ method ] ) {
+    	this[ method ]( event );
+  	}
+
   }
 
 
   tiltRobot(id, direction){
+
+  	var robot = robot[i];
 
   }
 
@@ -37,40 +59,28 @@ class Ricochet {
 
 
 
-}
 
 
 
 
+ 	draw(){
 
-
-
-
-var canvas = document.getElementById("myCanvas");
-var ctx = canvas.getContext("2d");
-var ricochet = new Ricochet(20, 20)
-var rows = 16;
-var cols = 16;
-
-
-
-
-function draw(canvas, ricochet, rows, cols){
-
-	drawGrid(canvas, rows, cols);
-	drawRobots(canvas, ricochet.getRobots(), rows, cols);
-	drawWalls(canvas, ricochet.getWalls(), rows, cols);
-}
+		this.drawGrid();
+		this.drawRobots();
+		this.drawWalls();
+	}
 
 
 
 
 
 // Draw the grid lines on the board.
-function drawGrid(canvas, rows, cols){
+drawGrid(){
 	
-	var ctx = canvas.getContext("2d");
-
+	var ctx = this.canvas.getContext("2d");
+	canvas = this.canvas;
+	rows = this.boardHeight;
+	cols = this.boardWidth;
 
 	// Calculate number distance between lines 
 	var vLineSpace = canvas.width / rows;
@@ -94,8 +104,9 @@ function drawGrid(canvas, rows, cols){
 }
 
 
-function drawCircle(x, y, size, color){
-	console.log(color)
+
+drawCircle(x, y, size, color){
+
 	ctx.strokeStyle = color;
 	ctx.fillStyle = color;
 	ctx.beginPath();
@@ -104,21 +115,25 @@ function drawCircle(x, y, size, color){
 }
 
 
-function drawRobots(ctx, robots, rows, cols){
+drawRobots(){
+
+	var canvas = this.canvas;
+	var ctx = canvas.getContext("2d");
 
 	// Calculate number distance between lines 
 	var vSpace = canvas.width / rows;
 	var hSpace = canvas.height / cols;
-
-	console.log(robots)
-	for(robot of robots){
-		console.log(robot.x)
-		drawCircle(robot.x * hSpace - hSpace / 2, robot.y * vSpace - vSpace / 2, 20, robot.color)
+	
+	for(const robot of this.robots){
+		this.drawCircle(robot.x * hSpace - hSpace / 2, robot.y * vSpace - vSpace / 2, 20, robot.color)
 	}
 }
 
 
-function drawWall(ctx, x1, y1, x2, y2){
+drawWall(x1, y1, x2, y2){
+
+	var canvas = this.canvas;
+	var ctx = canvas.getContext("2d");
 
 	// Calculate number distance between lines 
 	var vSpace = canvas.width / rows;
@@ -134,88 +149,166 @@ function drawWall(ctx, x1, y1, x2, y2){
 
 }
 
-function drawWalls(ctx, walls, rows, cols){
+drawWalls(){
 
-	console.log(walls)
-	for(wall of walls){
-		drawWall(ctx, wall[0], wall[1], wall[2], wall[3]);
+	for(const wall of this.walls){
+		this.drawWall(wall[0], wall[1], wall[2], wall[3]);
 	}
+
+
 }
 
 
-drawGrid(canvas, 50);
+
+}
+
+
+
+
+
+
+
+
+
+class InputHandler{
+
+
+	constructor(canvas, parent_app) {
+
+		this.parent_app = parent_app;
+    this.canvas = canvas;	
+		canvas.addEventListener("mousedown", this, false);
+		canvas.addEventListener('mouseup', this);
+		this.x1 = 0; 
+		this.y1 = 0;
+		this.x2 = 0;
+		this.y2 = 0;
+
+  }
+
+  // https://metafizzy.co/blog/this-in-event-listeners/
+ 	handleEvent(event) {
+
+    var method = 'on_' + event.type;
+
+  	// call method if there
+ 		if ( this[ method ] ) {
+    	this[ method ]( event );
+  	}
+
+  }
+
 
 
 // User Input
 
-canvas.addEventListener("mousedown", mouseDownHandler, false);
+
+	mousedragged(){
 
 
-// canvas.addEventListener('mousemove', moveListener);
+		var x1 = this.x1;
+		var x2 = this.x2;
+		var y1 = this.y1;
+		var y2 = this.y2;
 
-canvas.addEventListener('mouseup', mouseUpListener);
+		var dist = Math.sqrt((x2-x1) * (x2-x1) +(y2-y1)*(y2-y1));
+		if(dist < 100) return;
+
+		
+		var dAx = x2 - x1;
+		var dAy = y2 - y1;
+		var dBx = 1;
+		var dBy = 0;
 
 
-function mouseDragged(x1,y1,x2,y2){
 
-	var dist = Math.sqrt((x2-x1) * (x2-x1) +(y2-y1)*(y2-y1));
-	if(dist < 100) return;
+		const event = new CustomEvent('moverobot', { id: 1, direction: 'e' });
 
+
+		var angle = Math.atan2(dAx * dBy - dAy * dBx, dAx * dBx + dAy * dBy);
+		var degree_angle = angle * (180 / Math.PI);
 	
-	var dAx = x2 - x1;
-	var dAy = y2 - y1;
-	var dBx = 1;
-	var dBy = 0;
 
+		if(degree_angle > -30 && degree_angle < 30){
+			event.direction = 'e';
+		}
+		else if(degree_angle > 60 && degree_angle < 120){
+			event.direction = 'n';
+		}
+		else if(degree_angle > 150 && degree_angle < 180 || degree_angle < -150 && degree_angle > -180 ){
+			event.direction = 'w';
+		}
+		else if(degree_angle < -60 && degree_angle > -120){
+			event.direction = 's';
+		}
 
-	var angle = Math.atan2(dAx * dBy - dAy * dBx, dAx * dBx + dAy * dBy);
-	var degree_angle = angle * (180 / Math.PI);
-	console.log(degree_angle);
-
-	if(degree_angle > -30 && degree_angle < 30){
-		console.log("right")
-	}
-	else if(degree_angle > 60 && degree_angle < 120){
-		console.log("up")
-	}
-	else if(degree_angle > 150 && degree_angle < 180 || degree_angle < -150 && degree_angle > -180 ){
-		console.log("left")
-	}
-	else if(degree_angle < -60 && degree_angle > -120){
-		console.log("down")
-	}
+		window.dispatchEvent(event);
 
 
 
 }
 
 
-var x1, y1, x2, y2;
 
 // Receives mouse inputs
-function mouseDownHandler(e){
+ on_mousedown(e){
 
   console.log("mouse clicked")
 	let rect = canvas.getBoundingClientRect();
-	x1 = Math.floor(e.clientX - rect.left);
-	y1 = Math.floor(e.clientY - rect.top);
+	this.x1 = Math.floor(e.clientX - rect.left);
+	this.y1 = Math.floor(e.clientY - rect.top);
 
 
 }
 
 // Receives mouse inputs
-function mouseUpListener(e){
+on_mouseup(e){
+
+	console.log("this: ", this);
 
   console.log("mouse released")
 	let rect = canvas.getBoundingClientRect();
-	x2 = Math.floor(e.clientX - rect.left);
-	y2 = Math.floor(e.clientY - rect.top);
+	this.x2 = Math.floor(e.clientX - rect.left);
+	this.y2 = Math.floor(e.clientY - rect.top);
 
-
-    mouseDragged(x1,y1,x2,y2);
+	if(!(this.x1 == 0 || this.x2 == 0)){
+		this.mousedragged();
+	}
+	
 }
 
 
 
 
-draw(canvas, ricochet, rows, cols);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+var rows = 16;
+var cols = 16;
+
+
+app = new App(canvas, 16, 16);
+
+
+
