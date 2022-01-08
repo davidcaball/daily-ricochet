@@ -77,10 +77,23 @@ class Ricochet{
   // returns true if a robot can step in a certain direction
   robot_can_step(id, dx, dy){
 
-  	if(this.robots[id].x + dx >= 0 && this.robots[id].x + dx <= this.cols-1 && this.robots[id].y + dy >= 0 && this.robots[id].y + dy <= this.rows-1)
-  		return true;
+  	if(this.robots[id].x + dx >= 0 && this.robots[id].x + dx <= this.cols-1 && this.robots[id].y + dy >= 0 && this.robots[id].y + dy <= this.rows-1){
+  		
+  		// Check for collision with other robots
+  		var robot;
+  		var flag = true;
+  		console.log("this.robots[id].x + dx", this.robots[id].x + dx);
+  		console.log("this.robots[id].y + dy", this.robots[id].y + dy);
+  		for(robot of this.robots){
+  			
+  			console.log(robot);
+	  		if(robot.x == this.robots[id].x + dx && robot.y == this.robots[id].y + dy)
+					flag = false;
+	  	}
+	  }
 
-  	return false;
+	  if(flag) return true;
+  	else return false;
   }
 
   getRobots(){
@@ -273,7 +286,7 @@ class App {
 		var y2 = this.y2;
 
 		var dist = Math.sqrt((x2-x1) * (x2-x1) +(y2-y1)*(y2-y1));
-		if(dist < 100) return;
+		if(dist < 30) return;
 
 		
 		var dAx = x2 - x1;
