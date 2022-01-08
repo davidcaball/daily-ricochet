@@ -1,4 +1,6 @@
 
+
+
 class Robot{
 	constructor(x, y, id, color){
 		this.x = x;
@@ -13,7 +15,7 @@ class Ricochet{
 	constructor(rows, cols){
 		this.rows = rows;
 		this.cols = cols;
-		this.robots = [new Robot(1,1,"0", "#FF0000"), new Robot(2,2,"1","#00FF00"), new Robot(3,3,"2","#0000FF"), new Robot(4,4,"3", "#00FFFF")]
+		this.robots = [new Robot(0,0,0, "#FF0000"), new Robot(2,2,1,"#00FF00"), new Robot(3,3,2,"#0000FF"), new Robot(4,4,3, "#00FFFF")]
     this.walls = [[1,1,2,1], [3,1,3,2]];
 	}
 
@@ -22,9 +24,63 @@ class Ricochet{
   // If a robot exists in that location it will tilt it in that direction.
   tilt_robot(loc, direction){
   	//TODO
-  	console.log("tilting robot")
-  	
+  	console.log("tilting robot at ", loc);
 
+
+
+  	// Find out which robot is at that location if any
+  	var id = null;
+  	var robot;
+  	for(robot of this.robots){
+  		if(robot.x == loc[0] && robot.y == loc[1])
+  			id = robot.id;
+  	}
+
+
+  	// If no robot was there just return
+  	if(id == null){
+  		console.log("no robot here");
+  		return;
+  	}
+
+  	console.log("robot ", id, " will be moved ", direction);
+
+  	console.log("rows: ", rows);
+  	console.log("columns: ", cols);
+
+
+  	// Move robot
+  	var dx = 0;
+  	var dy = 0;
+
+  	if(direction == "n")
+  		dy = -1;
+  	else if(direction == "e")
+  		dx = 1;
+  	else if(direction == "s")
+  		dy = 1;
+  	else if(direction == "w")
+			dx = -1;
+
+		var target_robot = this.robots[id]
+
+		while(this.robot_can_step(id, dx, dy)){
+			console.log(target_robot);
+			target_robot.x += dx;
+			target_robot.y += dy;
+		}
+
+
+  }
+
+
+  // returns true if a robot can step in a certain direction
+  robot_can_step(id, dx, dy){
+
+  	if(this.robots[id].x + dx >= 0 && this.robots[id].x + dx <= this.cols-1 && this.robots[id].y + dy >= 0 && this.robots[id].y + dy <= this.rows-1)
+  		return true;
+
+  	return false;
   }
 
   getRobots(){
@@ -46,8 +102,6 @@ class Ricochet{
 }
 
 
-
-
 class App {
   constructor(canvas, boardHeight, boardWidth) {
     this.boardHeight = boardHeight;
@@ -58,7 +112,7 @@ class App {
     this.canvas_width = canvas.width;
 		this.canvas_height = canvas.height;
 
-		this.ricochet_game = new Ricochet(boardHeight, boardWidth)
+		this.ricochet_game = new Ricochet(boardHeight, boardWidth);
 
 
    
@@ -99,6 +153,10 @@ class App {
 
   tilt_robot(loc, direction){
   	this.ricochet_game.tilt_robot(loc, direction);
+  	const context = this.canvas.getContext('2d');
+		context.clearRect(0, 0, canvas.width, canvas.height);
+		console.log(this.ricochet_game.robots);
+  	this.draw();
   }
 
 
@@ -126,6 +184,9 @@ class App {
 			// Calculate number distance between lines 
 			var vLineSpace = canvas.width / rows;
 			var hLineSpace = canvas.height / cols;
+
+
+			ctx.lineWidth = 3;
 
 			for(var i = 1; i < rows; i++){
 				ctx.beginPath();
@@ -166,7 +227,7 @@ class App {
 			var hSpace = canvas.height / cols;
 			
 			for(const robot of this.ricochet_game.robots){
-				this.drawCircle(robot.x * hSpace - hSpace / 2, robot.y * vSpace - vSpace / 2, 20, robot.color)
+				this.drawCircle(robot.x * hSpace + hSpace / 2, robot.y * vSpace + vSpace / 2, 20, robot.color)
 			}
 		}
 
@@ -256,7 +317,7 @@ class App {
 // Receives mouse inputs
  input_mousedown(e){
 
-  console.log("mouse clicked")
+  console.log("mouse clicked here: ", this.x1, ", ", this.x2);
 	let rect = canvas.getBoundingClientRect();
 	this.x1 = Math.floor(e.clientX - rect.left);
 	this.y1 = Math.floor(e.clientY - rect.top);
@@ -301,7 +362,7 @@ input_mouseup(e){
 		var row = Math.floor(x / hLineSpace);
 		var col = Math.floor(y / vLineSpace);
 
-		return row;
+		return [row, col];
 
 
 	}
@@ -333,16 +394,13 @@ input_mouseup(e){
 
 
 
-
-
-
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
 var rows = 16;
 var cols = 16;
 
 
-app = new App(canvas, 16, 16);
+appl = new App(canvas, 16, 16);
 
 
 
