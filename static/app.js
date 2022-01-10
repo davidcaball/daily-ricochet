@@ -16,7 +16,7 @@ class Ricochet{
 		this.rows = rows;
 		this.cols = cols;
 		this.robots = [new Robot(0,0,0, "#FF0000"), new Robot(2,2,1,"#00FF00"), new Robot(3,3,2,"#0000FF"), new Robot(4,4,3, "#00FFFF")]
-    this.walls = [[1,1,2,1], [3,1,3,2]];
+    this.walls = [[1,1,2,1],[3,1,3,2],[1,4,1,5]];
 	}
 
 
@@ -43,10 +43,6 @@ class Ricochet{
   		return;
   	}
 
-  	console.log("robot ", id, " will be moved ", direction);
-
-  	console.log("rows: ", rows);
-  	console.log("columns: ", cols);
 
 
   	// Move robot
@@ -64,8 +60,8 @@ class Ricochet{
 
 		var target_robot = this.robots[id]
 
-		while(this.robot_can_step(id, dx, dy)){
-			console.log(target_robot);
+		while(this.robot_can_step(id, dx, dy, direction)){
+			// console.log(target_robot);
 			target_robot.x += dx;
 			target_robot.y += dy;
 		}
@@ -75,25 +71,58 @@ class Ricochet{
 
 
   // returns true if a robot can step in a certain direction
-  robot_can_step(id, dx, dy){
+  robot_can_step(id, dx, dy, direction){
 
-  	if(this.robots[id].x + dx >= 0 && this.robots[id].x + dx <= this.cols-1 && this.robots[id].y + dy >= 0 && this.robots[id].y + dy <= this.rows-1){
-  		
-  		// Check for collision with other robots
-  		var robot;
-  		var flag = true;
-  		console.log("this.robots[id].x + dx", this.robots[id].x + dx);
-  		console.log("this.robots[id].y + dy", this.robots[id].y + dy);
-  		for(robot of this.robots){
-  			
-  			console.log(robot);
-	  		if(robot.x == this.robots[id].x + dx && robot.y == this.robots[id].y + dy)
-					flag = false;
-	  	}
-	  }
+  	var robot = this.robots[id];
 
-	  if(flag) return true;
-  	else return false;
+
+	// If new location is out of bounds return false
+	if(!(robot.x + dx >= 0 && robot.x + dx <= this.cols-1 && robot.y + dy >= 0 && robot.y + dy <= this.rows-1))
+		return false;
+
+
+
+	// If it would collide with another robot return false
+	var cur_robot;
+	var flag = true;
+	// console.log("this.robots[id].x + dx", this.robots[id].x + dx);
+	// console.log("this.robots[id].y + dy", this.robots[id].y + dy);
+	for(cur_robot of this.robots){
+		
+		// console.log(robot);
+		if(cur_robot.x == robot.x + dx && cur_robot.y == robot.y + dy)
+			return false
+	}
+	  
+
+
+  // If robot would collide with a wall return false
+  var target_wall = 0;
+  if(direction == "n") 
+  	 target_wall = [robot.x,robot.y,robot.x+1,robot.y] // target_wall is the wall that would block the robot in that diretion
+  else if(direction == "e")
+  	target_wall = [robot.x+1,robot.y,robot.x+1,robot.y+1]
+  else if(direction == "s")
+  	target_wall = [robot.x,robot.y+1,robot.x+1,robot.y+1]
+  else if(direction == "w")
+  	target_wall = [robot.x,robot.y,robot.x,robot.y+1]
+
+
+	// Check if that wall exists
+  var cur_wall;
+  for(cur_wall of this.walls){
+  	console.log("Cur wall: ", cur_wall);
+  	var is_equal = true;
+  	for(let i = 0; i < 4; i ++){
+  		if(cur_wall[i] != target_wall[i])
+  			return false;
+  	}
+  }
+
+
+
+	return true;
+  	
   }
 
   getRobots(){
