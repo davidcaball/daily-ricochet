@@ -16,7 +16,7 @@ class Ricochet{
 		this.rows = rows;
 		this.cols = cols;
 		this.robots = [new Robot(0,0,0, "#FF0000"), new Robot(2,2,1,"#00FF00"), new Robot(3,3,2,"#0000FF"), new Robot(4,4,3, "#00FFFF")]
-    this.walls = [[1,1,2,1],[3,1,3,2],[1,4,1,5]];
+    this.walls = [[2,2,3,2],[3,1,3,2],[5,0,5,1]];
 	}
 
 
@@ -111,12 +111,12 @@ class Ricochet{
 	// Check if that wall exists
   var cur_wall;
   for(cur_wall of this.walls){
-  	console.log("Cur wall: ", cur_wall);
   	var is_equal = true;
   	for(let i = 0; i < 4; i ++){
   		if(cur_wall[i] != target_wall[i])
-  			return false;
+  			is_equal = false;
   	}
+  	if(is_equal) return false;
   }
 
 
