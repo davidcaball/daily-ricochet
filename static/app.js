@@ -16,7 +16,7 @@ class Ricochet{
 		this.rows = rows;
 		this.cols = cols;
 		this.robots = [new Robot(0,0,0, "#FF0000"), new Robot(2,2,1,"#00FF00"), new Robot(3,3,2,"#0000FF"), new Robot(4,4,3, "#00FFFF")]
-    this.walls = [[2,2,3,2],[3,1,3,2],[5,0,5,1]];
+    this.walls = [[2,2,3,2],[3,1,3,2],[5,0,5,1],[1,3,1,4],[1,4,2,4],[0,5,1,5],[0,12,1,12]];
 	}
 
 
@@ -146,6 +146,12 @@ class Ricochet{
 
 class App {
   constructor(canvas, boardHeight, boardWidth) {
+
+
+  	  
+    if(debugging) console.log("Starting in Debugging Mode");
+
+
     this.boardHeight = boardHeight;
     this.boardWidth = boardWidth;
 
@@ -158,7 +164,10 @@ class App {
 
 
    
-    
+    this.mouseX = 0;
+    this.mouseY = 0;
+    this.space_clicked = false;
+
 
     this.x1 = 0; 
 		this.y1 = 0;
@@ -167,8 +176,22 @@ class App {
 
 
     canvas.addEventListener("mousedown", this, false);
-    canvas.addEventListener("mouseup", this, false)
+    canvas.addEventListener("mouseup", this, false);
+    document.addEventListener("keyup", this, false);
 
+
+    // Debugging code which allows addition of walls
+    if(debugging){
+    	canvas.addEventListener('mousemove', this, false); 
+
+    	this.mouseX = 0;
+	    this.mouseY = 0;
+	    this.space_clicked = false;
+
+
+	    this.spacex = 0;
+	    this.spacey = 0;
+  	}
 
 
     this.draw();
@@ -178,8 +201,6 @@ class App {
 
 
  	handleEvent(event) {
-
- 		console.log("event id: ", event.rid);
 
     var method = 'input_' + event.type;
 
@@ -382,6 +403,61 @@ input_mouseup(e){
 	}
 }
 
+//Receives key up
+input_keyup(e){
+
+	console.log(e.keyCode);
+	if(e.keyCode == 32){
+		this.input_space_clicked();
+	}
+
+}
+
+
+
+
+
+
+input_mousemove(e){
+	let rect = this.canvas.getBoundingClientRect();
+	this.mouseX = Math.floor(e.clientX - rect.left);
+	this.mouseY = Math.floor(e.clientY - rect.top);
+	
+}
+
+input_space_clicked(){
+
+
+	if(this.space_clicked){
+
+		// Calculate number distance between lines 
+		var vSpace = canvas.width / rows;
+		var hSpace = canvas.height / cols;
+
+		var point1x = Math.floor(this.spacex / hSpace);
+		var point1y = Math.floor(this.spacey / vSpace);
+
+		var point2x = Math.floor(this.mouseX / hSpace);
+		var point2y = Math.floor(this.mouseY / vSpace);
+
+		var new_wall = [point1x, point1y, point2x, point2y];
+
+		console.log(new_wall);
+
+
+
+	}
+	else{
+		console.log("clicked once");
+	}
+
+
+
+	this.space_clicked = !this.space_clicked;
+
+
+}
+
 
 
 
@@ -393,6 +469,24 @@ input_mouseup(e){
 	// Takes as input a point on the canvas and returns
 	// the row and column that point falls in
 	get_grid_location_from_coord(x,y){
+		console.log("x: ", x);
+		console.log("y: ", y)
+
+		// Calculate number distance between lines 
+		var vLineSpace = canvas.width / rows;
+		var hLineSpace = canvas.height / cols;
+
+
+		var row = Math.floor(x / hLineSpace);
+		var col = Math.floor(y / vLineSpace);
+
+		return [row, col];
+
+
+	}
+
+
+	add_wall(x,y){
 		console.log("x: ", x);
 		console.log("y: ", y)
 
@@ -431,7 +525,7 @@ input_mouseup(e){
 
 
 
-
+debugging = true;
 
 
 
