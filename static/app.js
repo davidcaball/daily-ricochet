@@ -16,7 +16,7 @@ class Ricochet{
 		this.rows = rows;
 		this.cols = cols;
 		this.robots = [new Robot(0,0,0, "#FF0000"), new Robot(2,2,1,"#00FF00"), new Robot(3,3,2,"#0000FF"), new Robot(4,4,3, "#00FFFF")]
-    this.walls = [[2,2,3,2],[3,1,3,2],[5,0,5,1],[1,3,1,4],[1,4,2,4],[0,5,1,5],[0,12,1,12]];
+    this.walls = [[2,2,3,2],[3,1,3,2],[5,0,5,1],[1,3,1,4],[1,4,2,4],[0,5,1,5],[0,12,1,12],[11,0,11,1],[9,1,9,2],[14,2,15,2],[15,2,15,3],[15,5,16,5],[11,4,11,5],[10,5,11,5],[6,4,6,5],[6,4,7,4],[5,6,6,6],[6,6,6,7],[7,7,8,7],[8,7,9,7],[9,7,9,8],[9,8,9,9],[7,7,7,8],[7,8,7,9],[7,9,8,9],[8,9,9,9],[12,6,13,6],[12,6,12,7],[12,9,13,9],[13,9,13,10],[15,10,16,10],[15,13,15,14],[14,14,15,14],[11,15,11,16],[9,14,9,15],[9,14,10,14],[6,14,6,15],[6,15,7,15],[5,15,5,16],[3,13,3,14],[3,13,4,13],[3,10,3,11],[2,10,3,10],[6,8,6,9],[5,9,6,9],[10,10,10,11],[10,11,11,11],[9,2,10,2]];
 	}
 
 
@@ -244,6 +244,10 @@ class App {
 			rows = this.boardHeight;
 			cols = this.boardWidth;
 
+			ctx.fillStyle = "#555555";
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+
 			// Calculate number distance between lines 
 			var vLineSpace = canvas.width / rows;
 			var hLineSpace = canvas.height / cols;
@@ -410,6 +414,9 @@ input_keyup(e){
 	if(e.keyCode == 32){
 		this.input_space_clicked();
 	}
+	if(e.keyCode == 83){
+		this.save_configuration();
+	}
 
 }
 
@@ -427,28 +434,34 @@ input_mousemove(e){
 
 input_space_clicked(){
 
+	// Calculate number distance between lines 
+	var vSpace = canvas.width / rows;
+	var hSpace = canvas.height / cols;
 
+	
+	console.log(this.space_clicked)
 	if(this.space_clicked){
 
-		// Calculate number distance between lines 
-		var vSpace = canvas.width / rows;
-		var hSpace = canvas.height / cols;
-
-		var point1x = Math.floor(this.spacex / hSpace);
-		var point1y = Math.floor(this.spacey / vSpace);
+	
+		var point1x = this.spacex;
+		var point1y = this.spacey;
 
 		var point2x = Math.floor(this.mouseX / hSpace);
 		var point2y = Math.floor(this.mouseY / vSpace);
 
 		var new_wall = [point1x, point1y, point2x, point2y];
 
-		console.log(new_wall);
-
-
+		this.ricochet_game.walls.push(new_wall);
+		console.log(this.ricochet_game.walls);
+		this.draw();
 
 	}
 	else{
-		console.log("clicked once");
+		console.log(this);
+		this.spacex = Math.floor(this.mouseX / hSpace);
+		this.spacey = Math.floor(this.mouseY / vSpace);
+ 
+		console.log(this.spacex, ", ", this.spacey);
 	}
 
 
@@ -501,6 +514,21 @@ input_space_clicked(){
 		return [row, col];
 
 
+	}
+
+	// From https://stackoverflow.com/questions/20489454/saving-a-javascript-object-to-a-file
+	save_configuration(){
+
+		var filename = "board";
+
+		var blob = new Blob([JSON.stringify(this.ricochet_game, null, 2)], {type: "application/json;charset=utf-8"}).slice(2,-1);
+    var url = URL.createObjectURL(blob);
+    var elem = document.createElement("a");
+    elem.href = url;
+    elem.download = filename;
+    document.body.appendChild(elem);
+    elem.click();
+    document.body.removeChild(elem);
 	}
 
 
