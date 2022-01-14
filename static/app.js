@@ -155,15 +155,15 @@ class Ricochet{
 class App {
 
 
-  constructor(canvas, boardHeight, boardWidth) {
+  constructor(canvas, document, rows, cols) {
 
 
   	  
     if(debugging) console.log("Starting in Debugging Mode");
 
 
-    this.boardHeight = boardHeight;
-    this.boardWidth = boardWidth;
+    this.rows = rows;
+    this.cols = cols;
 
 
     this.canvas = canvas;
@@ -172,7 +172,7 @@ class App {
 
 		this.colorMap = {0 : "#FF0000", 1: "#00FF00", 2: "#0000FF", 3: "#FFFF00"}
 
-		this.ricochet_game = new Ricochet(boardHeight, boardWidth, this.colorMap);
+		this.ricochet_game = new Ricochet(this.rows, this.cols, this.colorMap);
 
 
    	// Stores constant location of mouse
@@ -186,8 +186,8 @@ class App {
 		this.x2 = 0;
 		this.y2 = 0;
 
-		this.h_space = canvas.width / cols;
-		this.v_space  = canvas.height / rows;
+		this.h_space = canvas.width / this.cols;
+		this.v_space  = canvas.height / this.rows;
 
 
 
@@ -199,6 +199,10 @@ class App {
     canvas.addEventListener("mousedown", this, false);
     canvas.addEventListener("mouseup", this, false);
     document.addEventListener("keyup", this, false);
+
+		var button = document.getElementById("resetbutton");
+		console.log("b ",button);
+		button.addEventListener("click", this, false);
 
 
     // Debugging code which allows addition of walls
@@ -223,6 +227,7 @@ class App {
 
  	handleEvent(event) {
 
+ 		console.log(event);
     var method = 'input_' + event.type;
 
   	// call method if there
@@ -236,7 +241,7 @@ class App {
   tilt_robot(loc, direction){
   	this.ricochet_game.tilt_robot(loc, direction);
   	const context = this.canvas.getContext('2d');
-		context.clearRect(0, 0, canvas.width, canvas.height);
+		context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
   	this.draw();
 
@@ -264,7 +269,11 @@ class App {
 
 
 
-
+	reset(){
+		console.log("restting");
+		this.ricochet_game = new Ricochet(this.rows, this.cols, this.colorMap);
+		this.draw();
+	}
 
 
 
@@ -272,6 +281,7 @@ class App {
 
 
   // **********************************  Drawing Functions **********************************
+
 
 	 	draw(){
 
@@ -286,17 +296,17 @@ class App {
 		drawGrid(){
 			
 			var ctx = this.canvas.getContext("2d");
-			canvas = this.canvas;
-			rows = this.boardHeight;
-			cols = this.boardWidth;
+			var canvas = this.canvas;
+			var rows = this.rows;
+			var cols = this.cols;
 
 			ctx.fillStyle = "#D4D4CB";
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 
 			// Calculate number distance between lines 
-			var vLineSpace = canvas.width / rows;
-			var hLineSpace = canvas.height / cols;
+			var vLineSpace = this.v_space;
+			var hLineSpace = this.h_space;
 
 
 			ctx.lineWidth = 3;
@@ -322,7 +332,7 @@ class App {
 
 		drawCircle(x, y, size, color){
 
-			ctx = this.canvas.getContext("2d");
+			var ctx = this.canvas.getContext("2d");
 			ctx.strokeStyle = "#000000";
 			ctx.fillStyle = color;
 			ctx.beginPath();
@@ -334,7 +344,7 @@ class App {
 
 		drawSquare(x, y, size, color){
 
-			ctx = this.canvas.getContext("2d");
+			var ctx = this.canvas.getContext("2d");
 			ctx.strokeStyle = "#000000";
 			ctx.fillStyle = color;
 			ctx.lineWidth = 2;
@@ -372,8 +382,8 @@ class App {
 			var ctx = canvas.getContext("2d");
 
 			// Calculate number distance between lines 
-			var vSpace = canvas.width / rows;
-			var hSpace = canvas.height / cols;
+			var vSpace = canvas.height / this.rows;
+			var hSpace = canvas.width / this.cols;
 			
 			for(const robot of this.ricochet_game.robots){
 				this.drawCircle(robot.x * hSpace + hSpace / 2, robot.y * vSpace + vSpace / 2, this.robot_size, robot.color)
@@ -387,8 +397,8 @@ class App {
 			var ctx = canvas.getContext("2d");
 
 			// Calculate number distance between lines 
-			var vSpace = canvas.width / rows;
-			var hSpace = canvas.height / cols;
+			var vSpace = canvas.width / this.rows;
+			var hSpace = canvas.height / this.cols;
 
 			ctx.beginPath();
 			ctx.moveTo(x1 * hSpace, y1 * vSpace);
@@ -489,7 +499,7 @@ class App {
 
 		let loc = this.get_grid_location_from_coord(this.mouseX, this.mouseY);
 	  console.log("mouse clicked here: ", loc[0], ", ", loc[1]);
-		let rect = canvas.getBoundingClientRect();
+		let rect = this.canvas.getBoundingClientRect();
 		this.x1 = Math.floor(e.clientX - rect.left);
 		this.y1 = Math.floor(e.clientY - rect.top);
 	}
@@ -500,7 +510,7 @@ class App {
 		console.log("this: ", this);
 
 	  console.log("mouse released")
-		let rect = canvas.getBoundingClientRect();
+		let rect = this.canvas.getBoundingClientRect();
 		this.x2 = Math.floor(e.clientX - rect.left);
 		this.y2 = Math.floor(e.clientY - rect.top);
 
@@ -567,6 +577,14 @@ class App {
 
 	}
 
+	input_click(e){
+
+		if(e["path"][0] == document.getElementById("resetbutton")){
+			this.reset();
+		}
+	
+	}
+
 
 
 
@@ -584,12 +602,12 @@ class App {
 		console.log("y: ", y)
 
 		// Calculate number distance between lines 
-		var vLineSpace = canvas.width / rows;
-		var hLineSpace = canvas.height / cols;
+		var vLineSpace = this.canvas.width / this.rows;
+		var hLineSpace = this.canvas.height / this.cols;
 
 
-		var row = Math.floor(x / hLineSpace);
-		var col = Math.floor(y / vLineSpace);
+		var row = Math.floor(x / this.v_space);
+		var col = Math.floor(y / this.h_space);
 
 		return [row, col];
 
@@ -600,13 +618,9 @@ class App {
 		console.log("x: ", x);
 		console.log("y: ", y)
 
-		// Calculate number distance between lines 
-		var vLineSpace = canvas.width / rows;
-		var hLineSpace = canvas.height / cols;
 
-
-		var row = Math.floor(x / hLineSpace);
-		var col = Math.floor(y / vLineSpace);
+		var row = Math.floor(x / this.h_space);
+		var col = Math.floor(y / this.v_space);
 
 		return [row, col];
 
@@ -631,6 +645,8 @@ class App {
 
 
 
+
+
 }
 
 
@@ -648,19 +664,20 @@ class App {
 
 
 
-
-debugging = true;
-
+debugging = false;
 
 
-
-var canvas = document.getElementById("myCanvas");
-var ctx = canvas.getContext("2d");
-var rows = 16;
-var cols = 16;
+window.onload = function() {
 
 
-appl = new App(canvas, 16, 16);
+  var canvas = document.getElementById("myCanvas");
 
 
+	var ctx = canvas.getContext("2d");
+	var rows = 16;
+	var cols = 16;
 
+
+	appl = new App(canvas, document, 16, 16);
+
+};
