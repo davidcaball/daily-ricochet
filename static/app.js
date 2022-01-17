@@ -21,32 +21,16 @@ class Ricochet{
 		console.log(colors)
 
     // x position : y position : id of robot : id of target
-		this.targets = {"5:5:0:0": 0, "12:8:1:1": 1}
-
+		this.targets = [[5,5], [12,8], [14,14],[0,6],[14,2],[12,9],[6,14],[4,0]]
 	}
+
 
 
   // Takes a location {row#, col#} and direction in {"n", "e", "s", "w"}
   // If a robot exists in that location it will tilt it in that direction.
-  tilt_robot(loc, direction){
+  tilt_robot(id, direction){
   	//TODO
-  	console.log("tilting robot at ", loc);
-
-
-
-  	// Find out which robot is at that location if any
-  	var id = null;
-  	var robot;
-  	for(robot of this.robots){
-  		if(robot.x == loc[0] && robot.y == loc[1])
-  			id = robot.id;
-  	}
-
-
-  	// If no robot was there just return
-  	if(id == null){
-  		return;
-  	}
+  	
 
 
 
@@ -190,7 +174,7 @@ class App {
 		this.v_space  = canvas.height / this.rows;
 
 
-
+		// Actual pixel widths of robots and walls
 		this.robot_size = this.h_space * .35;
 		this.wall_width = this.h_space / 6;
 
@@ -200,9 +184,14 @@ class App {
     canvas.addEventListener("mouseup", this, false);
     document.addEventListener("keyup", this, false);
 
+
+    // Even listener for the reset button is bound to this app object
 		var button = document.getElementById("resetbutton");
-		console.log("b ",button);
 		button.addEventListener("click", this, false);
+
+		button = document.getElementById("update_score");
+		button.addEventListener("click", this, false);
+
 
 
     // Debugging code which allows addition of walls
@@ -219,12 +208,37 @@ class App {
   	}
 
 
+  	// There will be 8 targets on the board (id 0-7), this variable will indicate which one is currently selected
+  	this.currently_selected_target = 0;
+
     this.draw();
 
   }
 
 
 
+  // Is called when a different target is clicked on, will udpate the table 
+  // to show the score for that target
+
+  update_score() {
+  	console.log("In update score");
+	  var xhttp = new XMLHttpRequest();
+	  xhttp.onreadystatechange = function() {
+	    if (this.readyState == 4 && this.status == 200) {
+	     document.getElementById("score_table").innerHTML = this.responseText;
+	    }
+	  };
+	  xhttp.open("GET", "home_leaderboard?target_id="+this.currently_selected_target, true);
+	  xhttp.send();
+
+
+	  var small_canvas = document.getElementById("small_canvas");
+	  console.log(small_canvas);
+	}
+
+
+	// Handles all events that are passed to this object
+	// Determines which class method to call
  	handleEvent(event) {
 
  		console.log(event);
@@ -238,37 +252,56 @@ class App {
   }
 
 
+  // Is called when the mouse is clicked and dragged in a way that
+  // constitutes trying to move a robot. Calls the member variable 
+  // at that location, then redraws the board
   tilt_robot(loc, direction){
-  	this.ricochet_game.tilt_robot(loc, direction);
+
+
+
+  	// Get the robot ID that location, or -1 if there is none
+  	var robot_id = this.get_robot_at_location(loc[0], loc[1]);
+
+  	console.log(robot_id)
+
+  	if(robot_id < 0) return;
+
+
+  	this.ricochet_game.tilt_robot(robot_id, direction);
   	const context = this.canvas.getContext('2d');
 		context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
   	this.draw();
 
-  	this.check_is_at_target();
+  	this.check_is_at_target(robot_id);
   }
 
-  check_is_at_target(){
 
-  		var target_obj = this.ricochet_game.targets;
-	  	for(const robot of this.ricochet_game.robots){
-	  		for (var target in target_obj) {
-			    if(Object.prototype.hasOwnProperty.call(target_obj, target)) {
-			        let loc = target.split(":");
-			        var x = parseInt(loc[0],10);
-			        var y = parseInt(loc[1],10);
+  // Iterates through the robots and targets to see if a robot is currently
+  // at one of its target locations
+  check_is_at_target(robot_id){
 
-			
-			        if(robot.x == x && robot.y == y && target_obj[target] == robot.id){
-			        	console.log("target reached!");
-			        }
-			    }
+  		var targets = this.ricochet_game.targets;
+	  	var robot = this.ricochet_game.robots[robot_id];
+
+
+	  		for(let i = robot_id*2; i < robot_id*2+2; i++){
+			   	
+			   		let target = targets[i];
+		        var x = parseInt(target[0]);
+		        var y = parseInt(target[1]);
+
+		
+		        if(robot.x == x && robot.y == y){
+		        	console.log("robot ", robot.id, "reached its target!");
+		        }
+			    
 	  		}
-	 		}
+	 		
 	}
 
 
-
+	// Resets the board to its original instance
 	reset(){
 		console.log("restting");
 		this.ricochet_game = new Ricochet(this.rows, this.cols, this.colorMap);
@@ -329,7 +362,7 @@ class App {
 		}
 
 
-
+		// Draw a circle of radius <size> and color <color> at location <x,y>
 		drawCircle(x, y, size, color){
 
 			var ctx = this.canvas.getContext("2d");
@@ -342,9 +375,11 @@ class App {
 			ctx.stroke();
 		}
 
-		drawSquare(x, y, size, color){
+		// Draw a square of side length <size> and color <color> at location <x,y>
+		drawSquare(x, y, size, color, canvas=this.canvas){
 
-			var ctx = this.canvas.getContext("2d");
+			console.log(x,y);
+			var ctx = canvas.getContext("2d");
 			ctx.strokeStyle = "#000000";
 			ctx.fillStyle = color;
 			ctx.lineWidth = 2;
@@ -353,10 +388,13 @@ class App {
 			ctx.fill();
 			ctx.stroke();
 
+
+
 		}
 
-		drawTriangle(x,y,size,color) {
-		    var ctx = this.canvas.getContext('2d');
+		// Draw a triangle of side length <size> and color <color> at location <x,y>
+		drawTriangle(x,y,size,color,canvas=this.canvas) {
+		    var ctx = canvas.getContext('2d');
 		    
 		    let a = size/2;
 				let h = size/(2*.86602);
@@ -376,6 +414,7 @@ class App {
 	  		
 		}
 
+		// Draws all robots in self.ricochet_game.robots()
 		drawRobots(){
 
 			var canvas = this.canvas;
@@ -389,6 +428,7 @@ class App {
 				this.drawCircle(robot.x * hSpace + hSpace / 2, robot.y * vSpace + vSpace / 2, this.robot_size, robot.color)
 			}
 		}
+
 
 
 		drawWall(x1, y1, x2, y2){
@@ -416,25 +456,44 @@ class App {
 			}
 		}
 
+
+		draw_target(id, x, y, canvas=this.canvas){
+			
+
+			var color = this.colorMap[Math.floor(id/2)];
+			var shape;
+
+
+			if(id % 2 == 0)
+				this.drawSquare(x, y, this.robot_size*.7, color, canvas);
+			else
+				this.drawTriangle(x, y, this.robot_size*.9, color, canvas);
+
+
+
+
+
+				
+
+
+		}
+
+
 		draw_targets(){
 
-			var target_obj = this.ricochet_game.targets;
+			var targets = this.ricochet_game.targets;
 			var counter = 0;
-			for (var target in target_obj) {
-		    if (Object.prototype.hasOwnProperty.call(target_obj, target)) {
-		        counter += 1;
-		        let t = target.split(":");
+
+  		console.log(targets)
+			for (let i = 0; i < targets.length; i++) {
+
+
 	
-		        var x = parseInt(t[0],10) * this.h_space + this.h_space / 2;
-		        var y = parseInt(t[1],10) * this.v_space + this.v_space / 2;
+		        var x = targets[i][0] * this.v_space + this.v_space/2;
+		        var y = targets[i][1]* this.h_space + this.h_space/2;
 
-		        var color = this.colorMap[parseInt(t[2])]
-
-		        if(counter % 2 == 0)
-		        	this.drawTriangle(x,y,this.robot_size*.9, color); 
-		        else
-		        	this.drawSquare(x,y,this.robot_size*.7, color); 
-		    }	
+		        this.draw_target(i, x, y);
+		       
 			}
 		}
 
@@ -466,7 +525,7 @@ class App {
 
 
 		// Find the row and column # that were initially clicked on
-		var loc = this.get_grid_location_from_coord(x1,y1);
+		var loc = [x1,y1];
 
 
 		var angle = Math.atan2(dAx * dBy - dAy * dBx, dAx * dBx + dAy * dBy);
@@ -497,11 +556,14 @@ class App {
 	// Receives mouse inputs
 	input_mousedown(e){
 
-		let loc = this.get_grid_location_from_coord(this.mouseX, this.mouseY);
-	  console.log("mouse clicked here: ", loc[0], ", ", loc[1]);
+
+	  
 		let rect = this.canvas.getBoundingClientRect();
 		this.x1 = Math.floor(e.clientX - rect.left);
 		this.y1 = Math.floor(e.clientY - rect.top);
+
+		console.log("mouse clicked here: ", Math.floor(this.x1/this.h_space), ", ", Math.floor(this.y1/this.v_space));
+
 	}
 
 	// Receives mouse inputs
@@ -582,6 +644,12 @@ class App {
 		if(e["path"][0] == document.getElementById("resetbutton")){
 			this.reset();
 		}
+
+		else if(e["path"][0] == document.getElementById("update_score")){
+			this.update_score();
+		}
+
+
 	
 	}
 
@@ -594,16 +662,32 @@ class App {
 
 // ********************************* Utility Functions *********************************
 
+	// Takes in x,y coordinates and returns the id of the robot in that location
+	// Returns -1 if no robot is in that location
+	get_robot_at_location(x,y){
+
+		var loc = this.get_grid_location_from_coord(x, y);
+
+		console.log("location, ", loc)
+
+  	var id = -1;
+  	for(const robot of this.ricochet_game.robots){
+  		if(robot.x == loc[0] && robot.y == loc[1])
+  			id = robot.id;
+  	}
+
+
+  	return id;
+	}
 	
+
+
 	// Takes as input a point on the canvas and returns
 	// the row and column that point falls in
 	get_grid_location_from_coord(x,y){
 		console.log("x: ", x);
 		console.log("y: ", y)
 
-		// Calculate number distance between lines 
-		var vLineSpace = this.canvas.width / this.rows;
-		var hLineSpace = this.canvas.height / this.cols;
 
 
 		var row = Math.floor(x / this.v_space);
