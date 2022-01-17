@@ -1,9 +1,9 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/ricochet'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:david203199@localhost/ricochet'
 db = SQLAlchemy(app)
 
 
@@ -51,6 +51,11 @@ def home():
 
 
 
-@app.route("/submit")
-def submit():
-    
+@app.route("/home_leaderboard")
+def get_home_leaderboard():
+
+    target_id = request.args.get('target_id')
+
+    scores = db.session.query(User, Scores).filter(Scores.user_id==User.user_id).order_by(Scores.score.asc()).all()
+
+    return render_template('table.html', scores=scores, target_id=target_id)
