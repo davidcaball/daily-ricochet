@@ -12,6 +12,7 @@ class Robot{
 
 
 class Ricochet{
+	
 	constructor(rows, cols, colors){
 		this.rows = rows;
 		this.cols = cols;
@@ -125,15 +126,9 @@ class Ricochet{
   loadFromFile(){
   	return
   }
-
-
-
-
-
-
-
-
 }
+
+
 
 
 class App {
@@ -217,31 +212,45 @@ class App {
 
 
 
-  // Is called when a different target is clicked on, will udpate the table 
+  // Is called when a target is clicked on, will udpate the table 
   // to show the score for that target
-
-  update_score() {
-  	console.log("In update score");
-	  var xhttp = new XMLHttpRequest();
-	  xhttp.onreadystatechange = function() {
-	    if (this.readyState == 4 && this.status == 200) {
-	     document.getElementById("score_table").innerHTML = this.responseText;
-	    }
-	  };
-	  xhttp.open("GET", "home_leaderboard?target_id="+this.currently_selected_target, true);
-	  xhttp.send();
+  update_score(target_id) {
 
 
-	  var small_canvas = document.getElementById("small_canvas");
-	  console.log(small_canvas);
+  	// Callback function called after ajax completes
+  	var cb = function(app){
+  		var scanvas = document.getElementById("small_canvas");
+			app.draw_target(target_id, scanvas.width/2, scanvas.height/2, scanvas);
+  	}
+
+  	// Submits ajax request
+  	var runAjax = function(callback, app){
+	
+		  var xhttp = new XMLHttpRequest();
+		  xhttp.onload = function() {
+		    if (this.readyState == 4 && this.status == 200) {
+		     document.getElementById("score_table").innerHTML = this.responseText;
+		     callback(app);
+		    }
+		  }
+		  xhttp.open("GET", "home_leaderboard?target_id" + target_id, true);
+	  	xhttp.send();
+		}
+
+
+	  
+  	runAjax(cb, this);
 	}
+
+
+
 
 
 	// Handles all events that are passed to this object
 	// Determines which class method to call
  	handleEvent(event) {
 
- 		console.log(event);
+ 		// console.log(event);
     var method = 'input_' + event.type;
 
   	// call method if there
@@ -303,6 +312,7 @@ class App {
 
 	// Resets the board to its original instance
 	reset(){
+
 		console.log("restting");
 		this.ricochet_game = new Ricochet(this.rows, this.cols, this.colorMap);
 		this.draw();
@@ -312,190 +322,179 @@ class App {
 
 
 
+	// **********************************  Drawing Functions **********************************
 
-  // **********************************  Drawing Functions **********************************
-
-
-	 	draw(){
-
-			this.drawGrid();
-			this.drawRobots();
-			this.drawWalls();
-			this.draw_targets()
-		}
+	// Calls all other draw methods
+	draw(){
+		this.drawGrid();
+		this.drawRobots();
+		this.drawWalls();
+		this.draw_targets()
+	}
 
 
-		// Draw the grid lines on the board.
-		drawGrid(){
-			
-			var ctx = this.canvas.getContext("2d");
-			var canvas = this.canvas;
-			var rows = this.rows;
-			var cols = this.cols;
+	// Draw the grid lines on the board.
+	drawGrid(){
+		
+		var ctx = this.canvas.getContext("2d");
+		var canvas = this.canvas;
+		var rows = this.rows;
+		var cols = this.cols;
 
-			ctx.fillStyle = "#D4D4CB";
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-
-			// Calculate number distance between lines 
-			var vLineSpace = this.v_space;
-			var hLineSpace = this.h_space;
+		ctx.fillStyle = "#D4D4CB";
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 
-			ctx.lineWidth = 3;
-
-			for(var i = 0; i < rows; i++){
-				ctx.beginPath();
-				ctx.moveTo(hLineSpace * i, 0);
-				ctx.lineTo(hLineSpace * i, canvas.height);
-				ctx.strokeStyle = "#111111";
-				ctx.stroke();
-			}
-
-			for(var i = 0; i < cols; i++){
-				ctx.beginPath();
-				ctx.moveTo(0, hLineSpace * i);
-				ctx.lineTo(canvas.width, hLineSpace * i);
-				ctx.strokeStyle = "#111111";
-				ctx.stroke();
-			}
-		}
+		// Calculate number distance between lines 
+		var vLineSpace = this.v_space;
+		var hLineSpace = this.h_space;
 
 
-		// Draw a circle of radius <size> and color <color> at location <x,y>
-		drawCircle(x, y, size, color){
+		ctx.lineWidth = 3;
 
-			var ctx = this.canvas.getContext("2d");
-			ctx.strokeStyle = "#000000";
-			ctx.fillStyle = color;
+		for(var i = 0; i < rows; i++){
 			ctx.beginPath();
-			ctx.arc(x, y, size, 0, 2 * Math.PI);
-			ctx.lineWidth = 2;
-			ctx.fill();
-			ctx.stroke();
-		}
-
-		// Draw a square of side length <size> and color <color> at location <x,y>
-		drawSquare(x, y, size, color, canvas=this.canvas){
-
-			console.log(x,y);
-			var ctx = canvas.getContext("2d");
-			ctx.strokeStyle = "#000000";
-			ctx.fillStyle = color;
-			ctx.lineWidth = 2;
-			ctx.beginPath();
-			ctx.rect(x - size/2, y-size/2, size, size);
-			ctx.fill();
-			ctx.stroke();
-
-
-
-		}
-
-		// Draw a triangle of side length <size> and color <color> at location <x,y>
-		drawTriangle(x,y,size,color,canvas=this.canvas) {
-		    var ctx = canvas.getContext('2d');
-		    
-		    let a = size/2;
-				let h = size/(2*.86602);
-		    let b =.5*h;
-
-		    ctx.lineWidth = 1;
-		    ctx.fillStyle = color;
-		    ctx.beginPath();
-		    ctx.moveTo(x,y-h);
-		    ctx.lineTo(x-a, y+b);
-		    ctx.lineTo(x+a, y+b);
-		    ctx.closePath();
-		    // ctx.moveTo(x,y-h);
-		    ctx.fill();
-		    ctx.stroke();
-
-	  		
-		}
-
-		// Draws all robots in self.ricochet_game.robots()
-		drawRobots(){
-
-			var canvas = this.canvas;
-			var ctx = canvas.getContext("2d");
-
-			// Calculate number distance between lines 
-			var vSpace = canvas.height / this.rows;
-			var hSpace = canvas.width / this.cols;
-			
-			for(const robot of this.ricochet_game.robots){
-				this.drawCircle(robot.x * hSpace + hSpace / 2, robot.y * vSpace + vSpace / 2, this.robot_size, robot.color)
-			}
-		}
-
-
-
-		drawWall(x1, y1, x2, y2){
-
-			var canvas = this.canvas;
-			var ctx = canvas.getContext("2d");
-
-			// Calculate number distance between lines 
-			var vSpace = canvas.width / this.rows;
-			var hSpace = canvas.height / this.cols;
-
-			ctx.beginPath();
-			ctx.moveTo(x1 * hSpace, y1 * vSpace);
-			ctx.lineTo(x2 * hSpace, y2 * vSpace);
+			ctx.moveTo(hLineSpace * i, 0);
+			ctx.lineTo(hLineSpace * i, canvas.height);
 			ctx.strokeStyle = "#111111";
-			ctx.lineWidth = this.wall_width;
 			ctx.stroke();
-
 		}
 
-		drawWalls(){
-
-			for(const wall of this.ricochet_game.walls){
-				this.drawWall(wall[0], wall[1], wall[2], wall[3]);
-			}
+		for(var i = 0; i < cols; i++){
+			ctx.beginPath();
+			ctx.moveTo(0, hLineSpace * i);
+			ctx.lineTo(canvas.width, hLineSpace * i);
+			ctx.strokeStyle = "#111111";
+			ctx.stroke();
 		}
+	}
 
 
-		draw_target(id, x, y, canvas=this.canvas){
+	// Draw a circle of radius <size> and color <color> at location <x,y>
+	drawCircle(x, y, size, color){
+
+		var ctx = this.canvas.getContext("2d");
+		ctx.strokeStyle = "#000000";
+		ctx.fillStyle = color;
+		ctx.beginPath();
+		ctx.arc(x, y, size, 0, 2 * Math.PI);
+		ctx.lineWidth = 2;
+		ctx.fill();
+		ctx.stroke();
+	}
+
+	// Draw a square of side length <size> and color <color> at location <x,y>
+	drawSquare(x, y, size, color, canvas=this.canvas){
+
+		console.log(x,y);
+		var ctx = canvas.getContext("2d");
+		ctx.strokeStyle = "#000000";
+		ctx.fillStyle = color;
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.rect(x - size/2, y-size/2, size, size);
+		ctx.fill();
+		ctx.stroke();
+
+
+
+	}
+
+	// Draw a triangle of side length <size> and color <color> at location <x,y>
+	drawTriangle(x,y,size,color,canvas=this.canvas) {
+	  var ctx = canvas.getContext('2d');
+	  
+	  let a = size/2;
+		let h = size/(2*.86602);
+	  let b =.5*h;
+
+	  ctx.lineWidth = 1;
+	  ctx.fillStyle = color;
+	  ctx.beginPath();
+	  ctx.moveTo(x,y-h);
+	  ctx.lineTo(x-a, y+b);
+	  ctx.lineTo(x+a, y+b);
+	  ctx.closePath();
+	  // ctx.moveTo(x,y-h);
+	  ctx.fill();
+	  ctx.stroke();
+
 			
+	}
 
-			var color = this.colorMap[Math.floor(id/2)];
-			var shape;
+	// Draws all robots in self.ricochet_game.robots()
+	drawRobots(){
 
+		var canvas = this.canvas;
+		var ctx = canvas.getContext("2d");
 
-			if(id % 2 == 0)
-				this.drawSquare(x, y, this.robot_size*.7, color, canvas);
-			else
-				this.drawTriangle(x, y, this.robot_size*.9, color, canvas);
-
-
-
-
-
-				
-
-
+		// Calculate number distance between lines 
+		var vSpace = canvas.height / this.rows;
+		var hSpace = canvas.width / this.cols;
+		
+		for(const robot of this.ricochet_game.robots){
+			this.drawCircle(robot.x * hSpace + hSpace / 2, robot.y * vSpace + vSpace / 2, this.robot_size, robot.color)
 		}
+	}
 
 
-		draw_targets(){
 
-			var targets = this.ricochet_game.targets;
-			var counter = 0;
+	drawWall(x1, y1, x2, y2){
 
-  		console.log(targets)
-			for (let i = 0; i < targets.length; i++) {
+		var canvas = this.canvas;
+		var ctx = canvas.getContext("2d");
 
+		// Calculate number distance between lines 
+		var vSpace = canvas.width / this.rows;
+		var hSpace = canvas.height / this.cols;
 
-	
-		        var x = targets[i][0] * this.v_space + this.v_space/2;
-		        var y = targets[i][1]* this.h_space + this.h_space/2;
+		ctx.beginPath();
+		ctx.moveTo(x1 * hSpace, y1 * vSpace);
+		ctx.lineTo(x2 * hSpace, y2 * vSpace);
+		ctx.strokeStyle = "#111111";
+		ctx.lineWidth = this.wall_width;
+		ctx.stroke();
 
-		        this.draw_target(i, x, y);
-		       
-			}
+	}
+
+	drawWalls(){
+
+		for(const wall of this.ricochet_game.walls){
+			this.drawWall(wall[0], wall[1], wall[2], wall[3]);
 		}
+	}
+
+
+	draw_target(id, x, y, canvas=this.canvas){
+		
+
+		var color = this.colorMap[Math.floor(id/2)];
+		var shape;
+
+
+		if(id % 2 == 0)
+			this.drawSquare(x, y, this.robot_size*.7, color, canvas);
+		else
+			this.drawTriangle(x, y, this.robot_size*.9, color, canvas);
+
+	}
+
+
+	draw_targets(){
+
+		var targets = this.ricochet_game.targets;
+		var counter = 0;
+
+		console.log(targets)
+		for (let i = 0; i < targets.length; i++) {
+
+	        var x = targets[i][0] * this.v_space + this.v_space/2;
+	        var y = targets[i][1]* this.h_space + this.h_space/2;
+
+	        this.draw_target(i, x, y);
+	       
+		}
+	}
 
 
 
@@ -503,7 +502,7 @@ class App {
 
 
 
-// **********************************  User Input **********************************
+	// **********************************  User Input **********************************
 
 
 	mousedragged(){
@@ -515,7 +514,7 @@ class App {
 		var y2 = this.y2;
 
 		var dist = Math.sqrt((x2-x1) * (x2-x1) +(y2-y1)*(y2-y1));
-		if(dist < 30) return;
+		if(dist < 15) return;
 
 		
 		var dAx = x2 - x1;
@@ -562,7 +561,15 @@ class App {
 		this.x1 = Math.floor(e.clientX - rect.left);
 		this.y1 = Math.floor(e.clientY - rect.top);
 
-		console.log("mouse clicked here: ", Math.floor(this.x1/this.h_space), ", ", Math.floor(this.y1/this.v_space));
+		var t_id = this.get_target_at_location(this.x1, this.y1);
+
+		console.log("im t_id ", t_id);
+
+		if( t_id > -1){
+			this.update_score(t_id);
+		}
+
+		// console.log("mouse clicked here: ", Math.floor(this.x1/this.h_space), ", ", Math.floor(this.y1/this.v_space));
 
 	}
 
@@ -646,7 +653,7 @@ class App {
 		}
 
 		else if(e["path"][0] == document.getElementById("update_score")){
-			this.update_score();
+			this.update_score(-1);
 		}
 
 
@@ -660,7 +667,26 @@ class App {
 
 
 
-// ********************************* Utility Functions *********************************
+	// ********************************* Utility Functions *********************************
+
+	// Takes in x and y cooridate and returns the target id at that grid, or -1
+	// if there isn't one.
+	get_target_at_location(x,y){
+
+		var loc = this.get_grid_location_from_coord(x,y);
+
+		console.log("loc ", loc);
+		for(var i = 0; i < this.ricochet_game.targets.length; i++){
+			var t = this.ricochet_game.targets[i];
+			console.log(t);
+
+			if(t[0] == loc[0] && t[1] == loc[1])
+				return i;
+			
+		}
+
+		return -1;
+	}
 
 	// Takes in x,y coordinates and returns the id of the robot in that location
 	// Returns -1 if no robot is in that location
@@ -724,22 +750,7 @@ class App {
     elem.click();
     document.body.removeChild(elem);
 	}
-
-
-
-
-
-
-
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -755,9 +766,6 @@ window.onload = function() {
 
 
   var canvas = document.getElementById("myCanvas");
-
-
-	var ctx = canvas.getContext("2d");
 	var rows = 16;
 	var cols = 16;
 
