@@ -1,9 +1,9 @@
-from flask import Flask, Blueprint, render_template, request
+from flask import Flask, Blueprint, render_template, request, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import login_required, current_user
 from . import db
 from .models import User, Scores, Board
-
-
+from datetime import datetime
 
 
 main = Blueprint('main', __name__)
@@ -17,6 +17,30 @@ def home():
     print(scores)
 
     return render_template('index.html',scores=scores)
+
+
+@main.route("/submit", methods=["POST"])
+def submit():
+
+    # print(f"{request.args=}")
+    # print(f"{request.form=}")
+    # print(f"{request.values=}")
+    # print(f"{request.json=}")
+
+
+    score = request.form.get("score")
+    target_id = request.form.get("target_id")
+
+    print(f'{score=}  {target_id=}')
+
+    new_score = Scores(board_id='1', target=target_id, user_id=current_user.user_id, score=score, day=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    # add the new user to the database
+    db.session.add(new_score)
+    db.session.commit()
+
+    return redirect(url_for('main.home'))
+
 
 
 
