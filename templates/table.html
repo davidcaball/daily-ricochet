@@ -1,0 +1,27 @@
+<table class="table">
+	  <thead>
+	    <tr>
+	      <th scope="col"><canvas id="small_canvas" width="20" height="20" background="FFFFFF"></canvas></th>
+	      <th scope="col">User</th>
+	      <th scope="col">Score</th>
+
+	    </tr>
+	  </thead>
+	  <tbody>
+	  	{% if scores|length == 0 %}
+    		<tr>
+	    		<td>No scores yet!</td>
+			    <td></td>
+			    <td></td>
+		 	</tr>
+		{% else %}
+			{% for i in range(scores|length) %}
+			    <tr>
+			      <td>{{ i+1 }}</td>
+			      <td>{{ scores[i][0].username }}</td>
+			      <td>{{ scores[i][1].score }} </td>
+			    </tr>
+			{% endfor %}
+		{% endif %}
+	</tbody>	
+</table>
