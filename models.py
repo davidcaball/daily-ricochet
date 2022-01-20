@@ -1,13 +1,9 @@
-from flask import Flask, render_template, request
-from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from . import db
 
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:david203199@localhost/ricochet'
-db = SQLAlchemy(app)
 
-
-class User(db.Model):
+class User(UserMixin, db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -38,24 +34,3 @@ class Scores(db.Model):
 
     def __repr__(self):
         return "<Score_id: %r,  board_id: %r, target: %r, user_id: %r, score: %r>" % (self.id, self.board_id, self.target, self.user_id, self.score)
-
-
-
-@app.route("/")
-def home():
- 
-    scores = db.session.query(User, Scores).filter(Scores.user_id==User.user_id).order_by(Scores.score.asc()).all()
-    print(scores)
-
-    return render_template('index.html',scores=scores)
-
-
-
-@app.route("/home_leaderboard")
-def get_home_leaderboard():
-
-    target_id = request.args.get('target_id')
-
-    scores = db.session.query(User, Scores).filter(Scores.user_id==User.user_id).order_by(Scores.score.asc()).all()
-
-    return render_template('table.html', scores=scores, target_id=target_id)
