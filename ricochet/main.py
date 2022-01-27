@@ -1,9 +1,11 @@
 from flask import Flask, Blueprint, render_template, request, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import login_required, current_user
-from . import db
 from .models import User, Scores, Board
 from datetime import datetime
+from . import db
+
+
 
 
 main = Blueprint('main', __name__)
