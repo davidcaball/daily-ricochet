@@ -9,14 +9,14 @@ db = SQLAlchemy()
 
 def create_app():
 
-	app = Flask(__name__)
-	app.config['SECRET_KEY'] = "david203199"
-	app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:david203199@localhost/ricochet'
-	app.db = db
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = "david203199"
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:david203199@localhost/test'
+    app.db = db
 
-	db.init_app(app)
+    db.init_app(app)
 
-	login_manager = LoginManager()
+    login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
 
@@ -29,10 +29,10 @@ def create_app():
         return User.query.get(int(user_id))
 
 
-	from .auth import auth as auth_blueprint
-	app.register_blueprint(auth_blueprint)
+    from .auth import auth as auth_blueprint
+    app.register_blueprint(auth_blueprint)
 
-	from .main import main as main_blueprint
-	app.register_blueprint(main_blueprint)
+    from .main import main as main_blueprint
+    app.register_blueprint(main_blueprint)
 
-	return app
+    return app

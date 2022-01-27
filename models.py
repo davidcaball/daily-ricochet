@@ -8,10 +8,14 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password  = db.Column(db.String(120), unique=False, nullable=False)
+    points = db.Column(db.Integer, default=0)
+    first_places = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return '<User %r: %r>' % (self.user_id, self.username)
 
+    def get_id(self):
+        return (self.user_id)
 
 
 class Board(db.Model):
