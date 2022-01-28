@@ -33,8 +33,7 @@ def submit():
     score = request.form.get("score")
     target_id = request.form.get("target_id")
 
-    print(f'{score=}  {target_id=}')
-
+ 
     new_score = Scores(board_id='1', target=target_id, user_id=current_user.user_id, score=score, day=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     # add the new user to the database
